@@ -1,0 +1,5 @@
+pytest
+numpy
+sentence-transformers
+pydantic
+pymongo

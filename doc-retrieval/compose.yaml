@@ -1,0 +1,41 @@
+services:
+    backend:
+        build:
+            context: ./backend
+            target: dev-envs 
+        container_name: backend
+        environment:
+            - PORT=8000
+            - MONGODB_URL=mongodb://user:pass@db:27017
+            - MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+            - FAISS_OPT_LEVEL=generic
+        ports:
+            - '8000:8000'
+        restart: 'unless-stopped'
+        volumes:
+            - ./backend/app:/app/app
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"]
+            interval: 20s
+            timeout: 3s
+            retries: 5
+            start_period: 5s
+        depends_on:
+            db:
+                condition: service_healthy
+
+    db:
+        image: mongodb/mongodb-community-server
+        environment:
+            - MONGODB_INITDB_ROOT_USERNAME=user
+            - MONGODB_INITDB_ROOT_PASSWORD=pass
+        volumes:
+            - mongo-data:/data/db
+        healthcheck:
+            test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+volumes:    
+    mongo-data:
